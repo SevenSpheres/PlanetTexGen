@@ -1,4 +1,4 @@
-# PlanetTexGen
+# Planet Texture Generator
 This program randomly generates terrestrial planet textures. It's still a work-in-progress and the code is
 somewhat messy, but it's definitely usable. Please report any bugs you find on the Issues page!
 
