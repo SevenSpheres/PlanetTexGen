@@ -92,7 +92,7 @@ while True:
                 color_a = (int(z_normalized*eval(values['LandR'])), int(z_normalized*eval(values['LandG'])), int(z_normalized*eval(values['LandB'])))
                 color_b = (eval(values['OceanR']), eval(values['OceanG']), eval(values['OceanB']))
 
-                if z_normalized < (1-eval(values['OceanLevel'])):
+                if z_normalized > eval(values['OceanLevel']):
                     color = color_a
                 else:
                     color = color_b
@@ -118,7 +118,7 @@ while True:
                 color_a = (0, 0, 0)
                 color_b = (255, 255, 255)
 
-                if z_normalized < (1-eval(values['OceanLevel'])):
+                if z_normalized > eval(values['OceanLevel']):
                     color = color_a
                 else:
                     color = color_b
