@@ -27,8 +27,8 @@ while True:
 
     if event == 'Reset':
         window['LandR'].update('250')
-        window['LandG'].update('180')
-        window['LandB'].update('130')
+        window['LandG'].update('200')
+        window['LandB'].update('150')
         window['OceanR'].update('29')
         window['OceanG'].update('33')
         window['OceanB'].update('48')
