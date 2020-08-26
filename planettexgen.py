@@ -64,6 +64,7 @@ layout = [
     [sg.Text('Texture size:'), sg.Input(size=(15,1), key='TexSize', default_text='2048'),
     sg.Text('Seed:'), sg.Input(size=(15,1), key='Seed', default_text=random.randint(-20000, 20000))],
     [sg.Text('File name:'), sg.Input(size=(30,1), key='Filename', default_text='planet')],
+    [sg.Text('Generate:'), sg.Checkbox('Surface', key='Surface', default=True), sg.Checkbox('Specular', key='Spec', default=True)],
     [sg.Button('Generate'), sg.Button('Reset'), sg.Button('Exit'), sg.Text(size=(25,1), key='Output')],
     [sg.Button('Preview Surface'), sg.Button('Preview Spec')],
     [sg.Image(r'blank.png', key='Preview')],
@@ -72,6 +73,9 @@ window = sg.Window('Planet Texture Generator', layout, icon='icon.ico')
 
 while True:
     event, values = window.read()
+    temp = Image.new('RGB', (512, 256), (255, 255, 255))
+    temp.save('temp.png')
+
     if event == sg.WIN_CLOSED or event == 'Exit':
         os.remove('temp.png')
         break
@@ -87,6 +91,8 @@ while True:
         window['TexSize'].update('2048')
         window['Seed'].update(random.randint(-20000, 20000))
         window['Filename'].update('planet')
+        window['Surface'].update(True)
+        window['Spec'].update(True)
         window['Output'].update('All fields reset!')
 
     if event == 'Preview Surface':
@@ -113,10 +119,12 @@ while True:
             window['Output'].update('Error: missing filename!')
         else:
             size = eval(values['TexSize'])
-            tex = generate(size, values['Seed'], 'Surface')
-            spec = generate(size, values['Seed'], 'Specular')
-            tex.save('%s.png' % values['Filename'])
-            spec.save('%s-spec.png' % values['Filename'])
-            window['Output'].update('Texture generated!')
+            if values['Surface'] == True:
+                tex = generate(size, values['Seed'], 'Surface')
+                tex.save('%s.png' % values['Filename'])
+            if values['Spec'] == True:
+                spec = generate(size, values['Seed'], 'Specular')
+                spec.save('%s-spec.png' % values['Filename'])
+            window['Output'].update('Texture(s) generated!')
 
 window.close()
