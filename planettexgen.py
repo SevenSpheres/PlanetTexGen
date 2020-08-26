@@ -1,9 +1,57 @@
 from itertools import product
 import math
 import random
+import os
 from PIL import Image
 import noise
 import PySimpleGUI as sg
+
+def generate(size, seed, type):
+    width = size
+    height = round(size/2)
+    freq = 1
+    octaves = 10
+    persistence = 0.5
+    lacunarity = 2.0
+    tex = Image.new('RGB', (width, height))
+    spec = Image.new('RGB', (width, height))
+    scale = 5
+    latitudes = [lat / scale for lat in range(int(-90 * scale), int(90 * scale) + 1)]
+    longitudes = [lng / scale for lng in range(int(-180 * scale), int(180 * scale) + 1)]
+    radius = height / math.pi
+    lng_std = 0
+    lat_std = 0
+    if seed == '':
+        rand = random.randint(-20000, 20000)
+    else:
+        rand = eval(seed)
+    for x, y in product(range(width), range(height)):
+        uvx = x / width
+        uvy = y / height
+        my = math.sin(uvy * math.pi - math.pi / 2)
+        mx = math.cos(uvx * 2 * math.pi) * math.cos(uvy * math.pi - math.pi / 2)
+        mz = math.sin(uvx * 2 * math.pi) * math.cos(uvy * math.pi - math.pi / 2)
+        z = noise.snoise3(
+            (mx + rand) / freq,
+            (my + rand) / freq,
+            mz / freq,
+            octaves=octaves,
+            persistence=persistence,
+            lacunarity=lacunarity
+        )
+        z_normalized = (z + 1) / 2
+        if type == 'Surface':
+            color_a = (int(z_normalized*eval(values['LandR'])), int(z_normalized*eval(values['LandG'])), int(z_normalized*eval(values['LandB'])))
+            color_b = (eval(values['OceanR']), eval(values['OceanG']), eval(values['OceanB']))
+        if type == 'Specular':
+            color_a = (0, 0, 0)
+            color_b = (255, 255, 255)
+        if z_normalized > eval(values['OceanLevel']):
+            color = color_a
+        else:
+            color = color_b
+        tex.putpixel((x, y), color)
+    return tex
 
 layout = [
     [sg.Text('Land color:'), sg.Input(size=(10,1), key='LandR', default_text='250'),
@@ -17,12 +65,15 @@ layout = [
     sg.Text('Seed:'), sg.Input(size=(15,1), key='Seed', default_text=random.randint(-20000, 20000))],
     [sg.Text('File name:'), sg.Input(size=(30,1), key='Filename', default_text='planet')],
     [sg.Button('Generate'), sg.Button('Reset'), sg.Button('Exit'), sg.Text(size=(25,1), key='Output')],
+    [sg.Button('Preview Surface'), sg.Button('Preview Spec')],
+    [sg.Image(r'blank.png', key='Preview')],
 ]
 window = sg.Window('Planet Texture Generator', layout, icon='icon.ico')
 
 while True:
     event, values = window.read()
     if event == sg.WIN_CLOSED or event == 'Exit':
+        os.remove('temp.png')
         break
 
     if event == 'Reset':
@@ -38,6 +89,16 @@ while True:
         window['Filename'].update('planet')
         window['Output'].update('All fields reset!')
 
+    if event == 'Preview Surface':
+        tex = generate(512, values['Seed'], 'Surface')
+        tex.save('temp.png')
+        window['Preview'].update('temp.png')
+
+    if event == 'Preview Spec':
+        tex = generate(512, values['Seed'], 'Specular')
+        tex.save('temp.png')
+        window['Preview'].update('temp.png')
+
     if event == 'Generate':
         window['Output'].update('Generating texture...')
         if values['TexSize'] == '':
@@ -52,79 +113,8 @@ while True:
             window['Output'].update('Error: missing filename!')
         else:
             size = eval(values['TexSize'])
-            width = size
-            height = round(size/2)
-            freq = 1
-            octaves = 10
-            persistence = 0.5
-            lacunarity = 2.0
-
-            tex = Image.new('RGB', (width, height))
-            spec = Image.new('RGB', (width, height))
-            scale = 5
-            latitudes = [lat / scale for lat in range(int(-90 * scale), int(90 * scale) + 1)]
-            longitudes = [lng / scale for lng in range(int(-180 * scale), int(180 * scale) + 1)]
-            radius = height / math.pi
-            lng_std = 0
-            lat_std = 0
-
-            if values['Seed'] == '':
-                rand = random.randint(-20000, 20000)
-            else:
-                rand = eval(values['Seed'])
-
-            for x, y in product(range(width), range(height)):
-                uvx = x / width
-                uvy = y / height
-                my = math.sin(uvy * math.pi - math.pi / 2)
-                mx = math.cos(uvx * 2 * math.pi) * math.cos(uvy * math.pi - math.pi / 2)
-                mz = math.sin(uvx * 2 * math.pi) * math.cos(uvy * math.pi - math.pi / 2)
-
-                z = noise.snoise3(
-                    (mx + rand) / freq,
-                    (my + rand) / freq,
-                    mz / freq,
-                    octaves=octaves,
-                    persistence=persistence,
-                    lacunarity=lacunarity
-                )
-                z_normalized = (z + 1) / 2
-                color_a = (int(z_normalized*eval(values['LandR'])), int(z_normalized*eval(values['LandG'])), int(z_normalized*eval(values['LandB'])))
-                color_b = (eval(values['OceanR']), eval(values['OceanG']), eval(values['OceanB']))
-
-                if z_normalized > eval(values['OceanLevel']):
-                    color = color_a
-                else:
-                    color = color_b
-
-                tex.putpixel((x, y), color)
-
-            for x, y in product(range(width), range(height)):
-                uvx = x / width
-                uvy = y / height
-                my = math.sin(uvy * math.pi - math.pi / 2)
-                mx = math.cos(uvx * 2 * math.pi) * math.cos(uvy * math.pi - math.pi / 2)
-                mz = math.sin(uvx * 2 * math.pi) * math.cos(uvy * math.pi - math.pi / 2)
-
-                z = noise.snoise3(
-                    (mx + rand) / freq,
-                    (my + rand) / freq,
-                    mz / freq,
-                    octaves=octaves,
-                    persistence=persistence,
-                    lacunarity=lacunarity
-                )
-                z_normalized = (z + 1) / 2
-                color_a = (0, 0, 0)
-                color_b = (255, 255, 255)
-
-                if z_normalized > eval(values['OceanLevel']):
-                    color = color_a
-                else:
-                    color = color_b
-
-                spec.putpixel((x, y), color)
-
+            tex = generate(size, values['Seed'], 'Surface')
+            spec = generate(size, values['Seed'], 'Specular')
             tex.save('%s.png' % values['Filename'])
             spec.save('%s-spec.png' % values['Filename'])
             window['Output'].update('Texture generated!')
