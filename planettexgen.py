@@ -43,6 +43,9 @@ def generate(size, seed, type):
         if type == 'Surface':
             color_a = (int(z_normalized*eval(values['LandR'])), int(z_normalized*eval(values['LandG'])), int(z_normalized*eval(values['LandB'])))
             color_b = (eval(values['OceanR']), eval(values['OceanG']), eval(values['OceanB']))
+        if type == 'Bump':
+            color_a = (int(z_normalized*200), int(z_normalized*200), int(z_normalized*200))
+            color_b = (0, 0, 0)
         if type == 'Specular':
             color_a = (0, 0, 0)
             color_b = (255, 255, 255)
@@ -64,9 +67,9 @@ layout = [
     [sg.Text('Texture size:'), sg.Input(size=(15,1), key='TexSize', default_text='2048'),
     sg.Text('Seed:'), sg.Input(size=(15,1), key='Seed', default_text=random.randint(-20000, 20000))],
     [sg.Text('File name:'), sg.Input(size=(30,1), key='Filename', default_text='planet')],
-    [sg.Text('Generate:'), sg.Checkbox('Surface', key='Surface', default=True), sg.Checkbox('Specular', key='Spec', default=True)],
+    [sg.Text('Generate:'), sg.Checkbox('Surface', key='Surface', default=True), sg.Checkbox('Bump', key='Bump', default=False), sg.Checkbox('Specular', key='Spec', default=True)],
     [sg.Button('Generate'), sg.Button('Reset'), sg.Button('Exit'), sg.Text(size=(25,1), key='Output')],
-    [sg.Button('Preview Surface'), sg.Button('Preview Spec')],
+    [sg.Button('Preview Surface'), sg.Button('Preview Bump'), sg.Button('Preview Spec')],
     [sg.Image(r'blank.png', key='Preview')],
 ]
 window = sg.Window('Planet Texture Generator', layout, icon='icon.ico')
@@ -93,13 +96,17 @@ while True:
         window['Filename'].update('planet')
         window['Surface'].update(True)
         window['Spec'].update(True)
+        window['Bump'].update(False)
         window['Output'].update('All fields reset!')
 
     if event == 'Preview Surface':
         tex = generate(512, values['Seed'], 'Surface')
         tex.save('temp.png')
         window['Preview'].update('temp.png')
-
+    if event == 'Preview Bump':
+        tex = generate(512, values['Seed'], 'Bump')
+        tex.save('temp.png')
+        window['Preview'].update('temp.png')
     if event == 'Preview Spec':
         tex = generate(512, values['Seed'], 'Specular')
         tex.save('temp.png')
@@ -122,6 +129,9 @@ while True:
             if values['Surface'] == True:
                 tex = generate(size, values['Seed'], 'Surface')
                 tex.save('%s.png' % values['Filename'])
+            if values['Bump'] == True:
+                bump = generate(size, values['Seed'], 'Bump')
+                bump.save('%s-bump.png' % values['Filename'])
             if values['Spec'] == True:
                 spec = generate(size, values['Seed'], 'Specular')
                 spec.save('%s-spec.png' % values['Filename'])
