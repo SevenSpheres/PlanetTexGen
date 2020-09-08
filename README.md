@@ -9,12 +9,9 @@ For Windows users, there is also a Windows executable available under "Releases"
 
 The icon for the program is a picture of Kepler-1649c in [Celestia](https://github.com/CelestiaProject/Celestia)
 (the texture is older than the generator, not made with it). Credit goes to **nussun** for originally finding the
-method this program uses to generate planet textures while working on her [star texture generator](https://github.com/nussun-celestia/StarTexGen).
+method this program uses to generate planet textures while working on her [star texture generator](https://github.com/nussun-celestia/StarTexGen),
+and **Askaniy** for originally writing the code that this program uses to generate ice caps.
 
 Here's a screenshot to show what the program looks like:
 
 ![Screenshot1](planettexgen.png)
-
-and an example of its output:
-
-![Screenshot2](planet.png)
