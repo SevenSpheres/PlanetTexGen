@@ -137,7 +137,7 @@ layout = [
     sg.Input(size=(10,1), key='OceanG', default_text='33'),
     sg.Input(size=(10,1), key='OceanB', default_text='48')],
     [sg.Text('Ocean level (0.25-0.75):'), sg.Input(size=(30,1), key='OceanLevel', default_text='0.5')],
-    [sg.Checkbox('Ice,', key='Ice', default=False, enable_events=True), sg.Text('latitude:'), sg.Input(size=(30,1), key='IceLevel', default_text='90', disabled=True, disabled_readonly_background_color='#bbbbbb')],
+    [sg.Checkbox('Ice,', key='Ice', default=False, enable_events=True), sg.Text('latitude:'), sg.Input(size=(30,1), key='IceLevel', default_text='90', disabled=True, disabled_readonly_text_color='#444444', disabled_readonly_background_color='#bbbbbb')],
     [sg.Text('Texture size:'), sg.Input(size=(15,1), key='TexSize', default_text='2048'),
     sg.Text('Seed:'), sg.Input(size=(15,1), key='Seed', default_text=randint(-20000, 20000))],
     [sg.Text('File name:'), sg.Input(size=(30,1), key='Filename', default_text='planet')],
@@ -166,7 +166,7 @@ while True:
         window['OceanB'].update('48')
         window['OceanLevel'].update('0.5')
         window['Ice'].update(False)
-        window['IceLevel'].update('90')
+        window['IceLevel'].update('90', disabled=True, text_color='#444444')
         window['TexSize'].update('2048')
         window['Seed'].update(randint(-20000, 20000))
         window['Filename'].update('planet')
@@ -198,14 +198,16 @@ while True:
 
     if event == 'Generate':
         window['Output'].update('Generating texture...')
-        if values['TexSize'] == '':
-            window['Output'].update('Error: missing texture size!')
-        elif values['LandR'] == '' or values['LandG'] == '' or values['LandB'] == '':
+        if values['LandR'] == '' or values['LandG'] == '' or values['LandB'] == '':
             window['Output'].update('Error: missing land color!')
         elif values['OceanR'] == '' or values['OceanG'] == '' or values['OceanB'] == '':
             window['Output'].update('Error: missing ocean color!')
         elif values['OceanLevel'] == '':
             window['Output'].update('Error: missing ocean level!')
+        elif values['Ice'] == True and values['IceLevel'] == '':
+            window['Output'].update('Error: missing ice level!')
+        elif values['TexSize'] == '':
+            window['Output'].update('Error: missing texture size!')
         elif values['Filename'] == '':
             window['Output'].update('Error: missing filename!')
         else:
@@ -214,12 +216,14 @@ while True:
                 tex = generate(size, values['Seed'], 'Surface')
                 if values['Ice'] == True:
                     tex = add_ice(tex, eval(values['IceLevel']))[0]
+                    spec = add_ice(tex, eval(values['IceLevel']))[1]
                 tex.save('%s.png' % values['Filename'])
             if values['Bump'] == True:
                 bump = generate(size, values['Seed'], 'Bump')
                 bump.save('%s-bump.png' % values['Filename'])
             if values['Spec'] == True:
-                spec = generate(size, values['Seed'], 'Specular')
+                if values['Ice'] == False or values['Surface'] == False:
+                    spec = generate(size, values['Seed'], 'Specular')
                 spec.save('%s-spec.png' % values['Filename'])
             window['Output'].update('Texture(s) generated!')
 
