@@ -2,9 +2,21 @@ from itertools import product
 from math import radians, pi, sin, cos, sqrt
 from random import randint
 import os
+import sys
+import inspect
 from PIL import Image, ImageDraw, ImageFilter
 import noise
 import PySimpleGUI as sg
+
+def folder(follow_symlinks=True): # Automatic main folder path detection (by jfs)
+    if getattr(sys, 'frozen', False): # py2exe, PyInstaller, cx_Freeze
+        path = os.path.abspath(sys.executable)
+    else:
+        path = inspect.getabsfile(folder)
+    if follow_symlinks:
+        path = os.path.realpath(path)
+    return os.path.dirname(path) + "/"
+path = folder()
 
 def generate(size, seed, type):
     width = size
@@ -56,7 +68,7 @@ def generate(size, seed, type):
         tex.putpixel((x, y), color)
     return tex
 
-def add_ice(img, lat):
+def add_ice(img, lat, iceColor):
     rand = 20    # maximum random brightness addition
     blur = 2     # noise blur radius
     side = 12    # half side of ice square near land
@@ -87,8 +99,7 @@ def add_ice(img, lat):
             draw_mask.point((x, y), int(br))
     # "Pulling" ice to the continents using the Pluto-Charon heights method
     p = spec.load()
-    for x in range(w):
-        for y in range(h):
+    for x, y in product(range(w), range(h)):
             b0 = p[x, y]
             if b0 != 0:
                 n = 0
@@ -106,58 +117,75 @@ def add_ice(img, lat):
                             break
     # Transferring ice from mask to base map
     mask = mask.filter(ImageFilter.GaussianBlur(blur))
-    mask.save('mask.png')
+    mask.save(path + 'mask.png')
     base = base.convert('RGBA')
     draw_base = ImageDraw.Draw(base)
     limit = (1 - abs(cos(radians(lat)))) * 255
-    for x in range(w):
-        for y in range(h):
-            if mask.getpixel((x, y)) > limit:
-                color = (
-                    255 - randint(0, 14),
-                    255 - randint(0, 8),
-                    255 - randint(0, 5))
-                draw_spec.point((x, y), 64)
-            else:
-                color = base.getpixel((x, y))
-            draw_base.point((x, y), color)
+    for x, y in product(range(w), range(h)):
+        if mask.getpixel((x, y)) > limit:
+            color = iceColor
+            draw_spec.point((x, y), 64)
+        else:
+            color = base.getpixel((x, y))
+        draw_base.point((x, y), color)
     # Move the piece, cut off the excess and save
     crop = (w0, 0, int(1.25 * w0), h)
     base.paste(base.crop(crop))
     spec.paste(spec.crop(crop))
     cut = (0, 0, w0, h) # original size
-    os.remove('mask.png')
+    os.remove(path + 'mask.png')
     return [base.crop(cut), spec.crop(cut)]
 
-layout = [
-    [sg.Text('Land color:'), sg.Input(size=(10,1), key='LandR', default_text='250'),
-    sg.Input(size=(10,1), key='LandG', default_text='200'),
-    sg.Input(size=(10,1), key='LandB', default_text='150')],
-    [sg.Text('Ocean color:'), sg.Input(size=(10,1), key='OceanR', default_text='29'),
-    sg.Input(size=(10,1), key='OceanG', default_text='33'),
-    sg.Input(size=(10,1), key='OceanB', default_text='48')],
-    [sg.Text('Ocean level (0.25-0.75):'), sg.Input(size=(30,1), key='OceanLevel', default_text='0.5')],
-    [sg.Checkbox('Ice,', key='Ice', default=False, enable_events=True), sg.Text('latitude:'), sg.Input(size=(30,1), key='IceLevel', default_text='90', disabled=True, disabled_readonly_text_color='#444444', disabled_readonly_background_color='#bbbbbb')],
-    [sg.Text('Texture size:'), sg.Input(size=(15,1), key='TexSize', default_text='2048'),
-    sg.Text('Seed:'), sg.Input(size=(15,1), key='Seed', default_text=randint(-20000, 20000))],
-    [sg.Text('File name:'), sg.Input(size=(30,1), key='Filename', default_text='planet')],
+left = [
+    [sg.Text('Settings', font=("arial", 12))], 
+    [sg.Text('Texture size'), sg.Input(size=(10, 1), key='TexSize', default_text='2048')], 
+    [sg.Text('File name:'), sg.Input(size=(10, 1), key='Filename', default_text='planet')],
+    [sg.Text('Seed'), sg.Input(size=(6, 1), key='Seed', default_text=randint(-20000, 20000))],
+    [sg.Text("_" * 32, size=(22, 1))],
+    [sg.Text('Lands', font=("arial", 12))], 
+    [sg.Text('Color'), 
+    sg.Input(size=(4, 1), key='LandR', default_text='250'), 
+    sg.Input(size=(4, 1), key='LandG', default_text='200'), 
+    sg.Input(size=(4, 1), key='LandB', default_text='150')],
+    [sg.Text("_" * 32, size=(22, 1))],
+    [sg.Text('Oceans', font=("arial", 12))], 
+    [sg.Text('Color'), 
+    sg.Input(size=(4, 1), key='OceanR', default_text='29'),
+    sg.Input(size=(4, 1), key='OceanG', default_text='33'),
+    sg.Input(size=(4, 1), key='OceanB', default_text='48')],
+    [sg.Text('Level (0.25-0.75)'), sg.Input(size=(4, 1), key='OceanLevel', default_text='0.5')],
+    [sg.Text("_" * 32, size=(22, 1))],
+    [sg.Checkbox('Ice', font=("arial", 12), key='Ice', default=False, enable_events=True)],
+    [sg.Text('Color'), 
+    sg.Input(size=(4, 1), key='IceR', default_text='240', disabled=True, disabled_readonly_text_color='#444444', disabled_readonly_background_color='#bbbbbb'),
+    sg.Input(size=(4, 1), key='IceG', default_text='245', disabled=True, disabled_readonly_text_color='#444444', disabled_readonly_background_color='#bbbbbb'),
+    sg.Input(size=(4, 1), key='IceB', default_text='250', disabled=True, disabled_readonly_text_color='#444444', disabled_readonly_background_color='#bbbbbb')],
+    [sg.Text('Latitude'), sg.Input(size=(4, 1), key='IceLevel', default_text='60', disabled=True, disabled_readonly_text_color='#444444', disabled_readonly_background_color='#bbbbbb')],
+]
+right = [
     [sg.Text('Generate:'), sg.Checkbox('Surface', key='Surface', default=True), sg.Checkbox('Bump', key='Bump', default=False), sg.Checkbox('Specular', key='Spec', default=True)],
-    [sg.Button('Generate'), sg.Button('Reset'), sg.Button('Exit'), sg.Text(size=(25,1), key='Output')],
-    [sg.Button('Preview Surface'), sg.Button('Preview Bump'), sg.Button('Preview Spec')],
-    [sg.Image(r'blank.png', key='Preview')],
+    [sg.Button('Preview Surface'), sg.Button('Preview Bump'), sg.Button('Preview Spec'), sg.Button('Generate'), sg.Button('Reset'), sg.Button('Exit')],
+    [sg.Text(size=(25, 1), key='Output')],
+    [sg.Image(path+'blank.png', key='Preview')],
+]
+layout = [
+    [sg.Column(left), sg.VSeperator(), sg.Column(right)]
 ]
 window = sg.Window('Planet Texture Generator', layout, icon='icon.ico')
 
 while True:
     event, values = window.read()
     temp = Image.new('RGB', (512, 256), (255, 255, 255))
-    temp.save('temp.png')
+    temp.save(path + 'temp.png')
 
     if event == sg.WIN_CLOSED or event == 'Exit':
-        os.remove('temp.png')
+        os.remove(path + 'temp.png')
         break
 
     if event == 'Reset':
+        window['TexSize'].update('2048')
+        window['Filename'].update('planet')
+        window['Seed'].update(randint(-20000, 20000))
         window['LandR'].update('250')
         window['LandG'].update('200')
         window['LandB'].update('150')
@@ -166,10 +194,10 @@ while True:
         window['OceanB'].update('48')
         window['OceanLevel'].update('0.5')
         window['Ice'].update(False)
-        window['IceLevel'].update('90', disabled=True, text_color='#444444')
-        window['TexSize'].update('2048')
-        window['Seed'].update(randint(-20000, 20000))
-        window['Filename'].update('planet')
+        window['IceR'].update('240')
+        window['IceG'].update('245')
+        window['IceB'].update('250')
+        window['IceLevel'].update('60', disabled=True, text_color='#444444')
         window['Surface'].update(True)
         window['Spec'].update(True)
         window['Bump'].update(False)
@@ -177,24 +205,32 @@ while True:
 
     if event.startswith('Ice'):
         if values['Ice'] == True:
+            window['IceR'].update(disabled=False, text_color='#000000')
+            window['IceG'].update(disabled=False, text_color='#000000')
+            window['IceB'].update(disabled=False, text_color='#000000')
             window['IceLevel'].update(disabled=False, text_color='#000000')
         if values['Ice'] == False:
+            window['IceR'].update(disabled=True, text_color='#444444')
+            window['IceG'].update(disabled=True, text_color='#444444')
+            window['IceB'].update(disabled=True, text_color='#444444')
             window['IceLevel'].update(disabled=True, text_color='#444444')
 
     if event == 'Preview Surface':
         tex = generate(512, values['Seed'], 'Surface')
-        if values['Ice'] == True:
-            tex = add_ice(tex, eval(values['IceLevel']))[0]
-        tex.save('temp.png')
-        window['Preview'].update('temp.png')
+        if values['Ice']:
+            tex = add_ice(tex, eval(values['IceLevel']), (eval(values['IceR']), eval(values['IceG']), eval(values['IceB'])))[0]
+        tex.save(path + 'temp.png')
+        window['Preview'].update(path + 'temp.png')
     if event == 'Preview Bump':
         tex = generate(512, values['Seed'], 'Bump')
-        tex.save('temp.png')
-        window['Preview'].update('temp.png')
+        tex.save(path + 'temp.png')
+        window['Preview'].update(path + 'temp.png')
     if event == 'Preview Spec':
         tex = generate(512, values['Seed'], 'Specular')
-        tex.save('temp.png')
-        window['Preview'].update('temp.png')
+        if values['Ice']:
+            tex = add_ice(tex, eval(values['IceLevel']), (eval(values['IceR']), eval(values['IceG']), eval(values['IceB'])))[1]
+        tex.save(path + 'temp.png')
+        window['Preview'].update(path + 'temp.png')
 
     if event == 'Generate':
         window['Output'].update('Generating texture...')
@@ -212,19 +248,19 @@ while True:
             window['Output'].update('Error: missing filename!')
         else:
             size = eval(values['TexSize'])
-            if values['Surface'] == True:
+            if values['Surface']:
                 tex = generate(size, values['Seed'], 'Surface')
-                if values['Ice'] == True:
-                    tex = add_ice(tex, eval(values['IceLevel']))[0]
-                    spec = add_ice(tex, eval(values['IceLevel']))[1]
-                tex.save('%s.png' % values['Filename'])
-            if values['Bump'] == True:
+                if values['Ice']:
+                    tex = add_ice(tex, eval(values['IceLevel']), (eval(values['IceR']), eval(values['IceG']), eval(values['IceB'])))[0]
+                    spec = add_ice(tex, eval(values['IceLevel']), (eval(values['IceR']), eval(values['IceG']), eval(values['IceB'])))[1]
+                tex.save(path + '%s.png' % values['Filename'])
+            if values['Bump']:
                 bump = generate(size, values['Seed'], 'Bump')
-                bump.save('%s-bump.png' % values['Filename'])
-            if values['Spec'] == True:
+                bump.save(path + '%s-bump.png' % values['Filename'])
+            if values['Spec']:
                 if values['Ice'] == False or values['Surface'] == False:
                     spec = generate(size, values['Seed'], 'Specular')
-                spec.save('%s-spec.png' % values['Filename'])
+                spec.save(path + '%s-spec.png' % values['Filename'])
             window['Output'].update('Texture(s) generated!')
 
 window.close()
