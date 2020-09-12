@@ -137,26 +137,26 @@ def add_ice(img, lat, iceColor):
     return [base.crop(cut), spec.crop(cut)]
 
 left = [
-    [sg.Text('Settings', font=("arial", 12))], 
-    [sg.Text('Texture size'), sg.Input(size=(10, 1), key='TexSize', default_text='2048')], 
-    [sg.Text('File name:'), sg.Input(size=(10, 1), key='Filename', default_text='planet')],
+    [sg.Text('Settings', font=("arial", 12))],
+    [sg.Text('Texture size'), sg.Input(size=(10, 1), key='TexSize', default_text='2048')],
+    [sg.Text('File name'), sg.Input(size=(10, 1), key='Filename', default_text='planet')],
     [sg.Text('Seed'), sg.Input(size=(6, 1), key='Seed', default_text=randint(-20000, 20000))],
     [sg.Text("_" * 32, size=(22, 1))],
-    [sg.Text('Lands', font=("arial", 12))], 
-    [sg.Text('Color'), 
-    sg.Input(size=(4, 1), key='LandR', default_text='250'), 
-    sg.Input(size=(4, 1), key='LandG', default_text='200'), 
+    [sg.Text('Land', font=("arial", 12))],
+    [sg.Text('Color'),
+    sg.Input(size=(4, 1), key='LandR', default_text='250'),
+    sg.Input(size=(4, 1), key='LandG', default_text='200'),
     sg.Input(size=(4, 1), key='LandB', default_text='150')],
     [sg.Text("_" * 32, size=(22, 1))],
-    [sg.Text('Oceans', font=("arial", 12))], 
-    [sg.Text('Color'), 
+    [sg.Text('Ocean', font=("arial", 12))],
+    [sg.Text('Color'),
     sg.Input(size=(4, 1), key='OceanR', default_text='29'),
     sg.Input(size=(4, 1), key='OceanG', default_text='33'),
     sg.Input(size=(4, 1), key='OceanB', default_text='48')],
     [sg.Text('Level (0.25-0.75)'), sg.Input(size=(4, 1), key='OceanLevel', default_text='0.5')],
     [sg.Text("_" * 32, size=(22, 1))],
     [sg.Checkbox('Ice', font=("arial", 12), key='Ice', default=False, enable_events=True)],
-    [sg.Text('Color'), 
+    [sg.Text('Color'),
     sg.Input(size=(4, 1), key='IceR', default_text='240', disabled=True, disabled_readonly_text_color='#444444', disabled_readonly_background_color='#bbbbbb'),
     sg.Input(size=(4, 1), key='IceG', default_text='245', disabled=True, disabled_readonly_text_color='#444444', disabled_readonly_background_color='#bbbbbb'),
     sg.Input(size=(4, 1), key='IceB', default_text='250', disabled=True, disabled_readonly_text_color='#444444', disabled_readonly_background_color='#bbbbbb')],
@@ -194,9 +194,9 @@ while True:
         window['OceanB'].update('48')
         window['OceanLevel'].update('0.5')
         window['Ice'].update(False)
-        window['IceR'].update('240')
-        window['IceG'].update('245')
-        window['IceB'].update('250')
+        window['IceR'].update('240', disabled=True, text_color='#444444')
+        window['IceG'].update('245', disabled=True, text_color='#444444')
+        window['IceB'].update('250', disabled=True, text_color='#444444')
         window['IceLevel'].update('60', disabled=True, text_color='#444444')
         window['Surface'].update(True)
         window['Spec'].update(True)
