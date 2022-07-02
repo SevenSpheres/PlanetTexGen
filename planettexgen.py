@@ -141,20 +141,20 @@ left = [
     [sg.Text('Texture size'), sg.Input(size=(10, 1), key='TexSize', default_text='2048')],
     [sg.Text('File name'), sg.Input(size=(10, 1), key='Filename', default_text='planet')],
     [sg.Text('Seed'), sg.Input(size=(6, 1), key='Seed', default_text=randint(-20000, 20000))],
-    [sg.Text("_" * 32, size=(22, 1))],
+    [sg.HSeparator()],
     [sg.Text('Land', font=("arial", 12))],
     [sg.Text('Color'),
     sg.Input(size=(4, 1), key='LandR', default_text='250'),
     sg.Input(size=(4, 1), key='LandG', default_text='200'),
     sg.Input(size=(4, 1), key='LandB', default_text='150')],
-    [sg.Text("_" * 32, size=(22, 1))],
+    [sg.HSeparator()],
     [sg.Text('Ocean', font=("arial", 12))],
     [sg.Text('Color'),
     sg.Input(size=(4, 1), key='OceanR', default_text='29'),
     sg.Input(size=(4, 1), key='OceanG', default_text='33'),
     sg.Input(size=(4, 1), key='OceanB', default_text='48')],
     [sg.Text('Level (0.25-0.75)'), sg.Input(size=(4, 1), key='OceanLevel', default_text='0.5')],
-    [sg.Text("_" * 32, size=(22, 1))],
+    [sg.HSeparator()],
     [sg.Checkbox('Ice', font=("arial", 12), key='Ice', default=False, enable_events=True)],
     [sg.Text('Color'),
     sg.Input(size=(4, 1), key='IceR', default_text='240', disabled=True, disabled_readonly_text_color='#444444', disabled_readonly_background_color='#bbbbbb'),
@@ -169,7 +169,7 @@ right = [
     [sg.Image(path+'blank.png', key='Preview')],
 ]
 layout = [
-    [sg.Column(left), sg.VSeperator(), sg.Column(right)]
+    [sg.Column(left), sg.VSeparator(), sg.Column(right)]
 ]
 window = sg.Window('Planet Texture Generator', layout, icon='icon.ico')
 
