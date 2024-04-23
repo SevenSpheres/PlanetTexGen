@@ -6,7 +6,7 @@ import sys
 import inspect
 from PIL import Image, ImageDraw, ImageFilter
 import noise
-import PySimpleGUI as sg
+import FreeSimpleGUI as sg
 
 def folder(follow_symlinks=True): # Automatic main folder path detection (by jfs)
     if getattr(sys, 'frozen', False): # py2exe, PyInstaller, cx_Freeze

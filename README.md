@@ -15,3 +15,5 @@ and **Askaniy** for originally writing the code that this program uses to genera
 Here's a screenshot to show what the program looks like:
 
 ![Screenshot1](planettexgen.png)
+
+**Update 2024:** I don't actively maintain this anymore but I want to ensure it remains functional. Since PySimpleGUI is now a commercial product that's not compatible with open-source projects, I've replaced it with the [FreeSimpleGUI](https://github.com/spyoungtech/FreeSimpleGUI) fork. Let me know if there are any problems.
